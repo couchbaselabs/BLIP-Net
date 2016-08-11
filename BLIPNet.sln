@@ -1,0 +1,29 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BLIPNet", "BLIPNet\BLIPNet.csproj", "{1C4B506D-ED27-4F09-A0D9-AC546FC410A3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BLIPConsoleTest", "BLIPConsoleTest\BLIPConsoleTest.csproj", "{C61F38E3-5073-4B8C-BCC4-79C014834959}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BLIPTest", "BLIPTest\BLIPTest.csproj", "{A8E10898-9AF6-4228-B2CC-F49E233DEF64}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1C4B506D-ED27-4F09-A0D9-AC546FC410A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C4B506D-ED27-4F09-A0D9-AC546FC410A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C4B506D-ED27-4F09-A0D9-AC546FC410A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C4B506D-ED27-4F09-A0D9-AC546FC410A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C61F38E3-5073-4B8C-BCC4-79C014834959}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C61F38E3-5073-4B8C-BCC4-79C014834959}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C61F38E3-5073-4B8C-BCC4-79C014834959}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C61F38E3-5073-4B8C-BCC4-79C014834959}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8E10898-9AF6-4228-B2CC-F49E233DEF64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8E10898-9AF6-4228-B2CC-F49E233DEF64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8E10898-9AF6-4228-B2CC-F49E233DEF64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8E10898-9AF6-4228-B2CC-F49E233DEF64}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
