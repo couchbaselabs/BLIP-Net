@@ -152,7 +152,7 @@ namespace BLIP
             {
                 if (!IsMine || !CanWrite)
                 {
-                    Logger.E(LogDomain.BLIP, Security.Secure, "Attempt to write to a readonly BLIPMessage, throwing...");
+                    Logger.E(Security.Secure, "Attempt to write to a readonly BLIPMessage, throwing...");
                     throw new InvalidOperationException("Attempt to write to a readonly BLIPMessage");
                 }
 
@@ -302,9 +302,19 @@ namespace BLIP
 
         public override string ToString()
         {
-            //TODO: Length / compression
             var sb = new StringBuilder();
-            sb.AppendFormat("{0}[#{1}{2}", GetType().Name, Number, IsMine ? "->" : "<-");
+            var length = _body != null ? _body.Count : _encodedBody != null ? _encodedBody.Length : 0;
+            sb.AppendFormat("{0}[#{1}{2}, {3} bytes", GetType().Name, Number, IsMine ? "->" : "<-", length);
+            if (Flags.HasFlag(MessageFlags.Compressed))
+            {
+                if (_encodedBody != null && _body != null && _encodedBody.Length != _body.Count)
+                {
+                    sb.Append($" ({_encodedBody.Length} gzipped)");
+                }
+                else {
+                    sb.Append(", gzipped");
+                }
+            }
             if (Flags.HasFlag(MessageFlags.Urgent))
             {
                 sb.Append(", urgent");
@@ -326,6 +336,14 @@ namespace BLIP
             }
 
             sb.Append("]");
+            return sb.ToString();
+        }
+
+        public virtual string ToVerboseString()
+        {
+            var sb = new StringBuilder(ToString());
+            var props = JsonConvert.SerializeObject(Properties, Formatting.Indented);
+            sb.Append($" {props}");
             return sb.ToString();
         }
 
@@ -405,7 +423,7 @@ namespace BLIP
             moreComing = false;
             if (BytesWritten == 0)
             {
-                //LOG
+                Logger.I(Security.Secure, $"Now sending {this}");
             }
 
             var frame = new List<byte>(maxSize);
@@ -458,6 +476,9 @@ namespace BLIP
             frame.InsertRange(0, VarintBitConverter.GetVarintBytes((uint)Flags));
             frame.InsertRange(0, VarintBitConverter.GetVarintBytes(Number));
 
+            var finished = moreComing ? String.Empty : " (finished";
+            Logger.V(Security.Secure, 
+                     $"{this} pushing frame, bytes {prevBytesWritten}-{BytesWritten}{finished}");
 
             if (OnDataSent != null)
             {
@@ -488,6 +509,8 @@ namespace BLIP
         internal bool ReceivedFrame(MessageFlags flags, IEnumerable<byte> body)
         {
             var realized = body.ToArray();
+            Logger.V(Security.Secure,
+                     $"{this} rcvd bytes {_bytesReceived}-{(int)_bytesReceived + realized.Length}, flags={flags}");
             System.Diagnostics.Debug.Assert(!IsMine);
             System.Diagnostics.Debug.Assert(flags.HasFlag(MessageFlags.MoreComing));
 
@@ -555,6 +578,7 @@ namespace BLIP
 
             if (Properties != null && OnDataReceived != null)
             {
+                Logger.V(Security.Secure, $"{this} -> calling OnDataReceived({_encodedBody.Length} bytes)");
                 _encodedBody.Seek(0, SeekOrigin.Begin);
                 OnDataReceived(this, _encodedBody);
             }

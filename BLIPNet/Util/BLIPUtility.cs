@@ -28,11 +28,13 @@ namespace BLIP.Util
         public static BLIPException MakeException(BLIPError errorCode, string errorFormat, params object[] args)
         {
             var message = String.Format(errorFormat, args);
+            Logger.I(Security.Secure, $"BLIPError #{errorCode}: {message}");
             return new BLIPException(errorCode, message);
         }
 
         public static BLIPException MakeException(Exception inner)
         {
+            Logger.I(Security.Secure, $"BLIPError {inner}");
             return new BLIPException(inner);
         }
 

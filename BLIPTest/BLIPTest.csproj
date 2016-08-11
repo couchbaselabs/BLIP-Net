@@ -60,6 +60,7 @@
     <Compile Include="..\BLIPConsoleTest\BLIPWebSocketConnection.cs">
       <Link>BLIPWebSocketConnection.cs</Link>
     </Compile>
+    <Compile Include="LoggerWindow.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BLIPNet\BLIPNet.csproj">

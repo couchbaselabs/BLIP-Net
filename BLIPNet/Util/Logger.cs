@@ -23,12 +23,6 @@ using System.Diagnostics;
 
 namespace BLIP.Util
 {
-    public enum LogDomain
-    {
-        BLIP,
-        BLIPLifecycle
-    }
-
     public enum LogLevel
     {
         Error,
@@ -47,7 +41,7 @@ namespace BLIP.Util
 
     public static class Logger
     {
-        public static Action<LogLevel, LogDomain, Security, string> Output { get; set; }
+        public static Action<LogLevel, Security, string> Output { get; set; }
 
         public static LogLevel Level { get; set; }
 
@@ -56,38 +50,38 @@ namespace BLIP.Util
             Level = LogLevel.Info;
         }
 
-        internal static void D(LogDomain domain, Security security, string msg)
+        internal static void D(Security security, string msg)
         {
             #if DEBUG
-            Write(LogLevel.Debug, domain, security, msg);
+            Write(LogLevel.Debug, security, msg);
             #endif
         }
 
-        internal static void V(LogDomain domain, Security security, string msg)
+        internal static void V(Security security, string msg)
         {
-            Write(LogLevel.Verbose, domain, security, msg);
+            Write(LogLevel.Verbose, security, msg);
         }
 
-        internal static void I(LogDomain domain, Security security, string msg)
+        internal static void I(Security security, string msg)
         {
-            Write(LogLevel.Info, domain, security, msg);
+            Write(LogLevel.Info, security, msg);
         }
 
-        internal static void W(LogDomain domain, Security security, string msg)
+        internal static void W(Security security, string msg)
         {
-            Write(LogLevel.Warning, domain, security, msg);
+            Write(LogLevel.Warning, security, msg);
         }
 
-        internal static void E(LogDomain domain, Security security, string msg)
+        internal static void E(Security security, string msg)
         {
-            Write(LogLevel.Error, domain, security, msg);
+            Write(LogLevel.Error, security, msg);
         }
 
-        private static void Write(LogLevel level, LogDomain domain, Security security, string msg)
+        private static void Write(LogLevel level, Security security, string msg)
         {
             if (Level >= level)
             {
-                Output?.Invoke(level, domain, security, msg);
+                Output?.Invoke(level, security, msg);
             }
         }
     }

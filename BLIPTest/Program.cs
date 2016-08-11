@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using BLIP;
+using BLIP.Util;
 using BLIPConsoleTest;
 using Gtk;
 using Newtonsoft.Json;
@@ -43,12 +44,19 @@ namespace BLIPTest
         private static ListStore _listViewSource;
 
         private static MainWindow _window;
+        private static LoggerWindow _logWindow = new LoggerWindow();
 
         public static void Main(string[] args)
         {
             Application.Init();
             _window = SetupUI();
             _window.ShowAll();
+            _logWindow.Realize();
+            _logWindow.SetSizeRequest(640, 480);
+            Logger.Output += (level, sec, msg) =>
+            {
+                _logWindow.Append($"[{level}] {msg}");
+            };
             Application.Run();
         }
 
@@ -147,6 +155,11 @@ namespace BLIPTest
             connect.Activated += Connect_Activated;
             fileMenu.Append(connect);
 
+            var log = new MenuItem("Show Log...");
+            log.AddAccelerator("activate", agr, new AccelKey(Gdk.Key.L, Gdk.ModifierType.ControlMask, AccelFlags.Visible));
+            log.Activated += Log_Activated;
+            fileMenu.Append(log);
+
             var sep = new SeparatorMenuItem();
             fileMenu.Append(sep);
 
@@ -217,6 +230,11 @@ namespace BLIPTest
                 _responses.Add(response);
             };
             _listViewSource.AppendValues($"#{request.Number}");
+        }
+
+        static void Log_Activated(object sender, EventArgs e)
+        {
+            _logWindow.ShowAll();
         }
     }
 }

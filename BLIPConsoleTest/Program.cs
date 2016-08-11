@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using BLIP;
+using BLIP.Util;
 using Newtonsoft.Json;
 
 namespace BLIPConsoleTest
@@ -31,6 +32,11 @@ namespace BLIPConsoleTest
     {
         public static void Main(string[] args)
         {
+            Logger.Output += (level, security, msg) =>
+            {
+                Console.WriteLine($"[{level}] {msg}");
+            };
+
             Console.Write("Connection URL: ");
             var url = Console.ReadLine();
             var connection = new BLIPWebSocketConnection(new Uri(url.Replace("http","ws")));
@@ -56,7 +62,11 @@ namespace BLIPConsoleTest
                 };
 
                 Console.WriteLine($"Sending request #{request.Number}...");
-                are.WaitOne();
+                var success = are.WaitOne(TimeSpan.FromSeconds(5));
+                if (!success)
+                {
+                    Console.WriteLine("Didn't get a response");
+                }
             }
         }
     }

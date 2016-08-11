@@ -54,6 +54,9 @@ namespace BLIP
         private List<Message> _outBox;
         private List<Message> _iceBox;
         private int _pendingDelegateCalls;
+        #if DEBUG
+        private int _maxPendingDelegateCalls;
+        #endif
         private Message _sendingMsg;
         private uint _numRequestsSent;
         private uint _numRequestsReceived;
@@ -138,6 +141,7 @@ namespace BLIP
 
         protected void TransportOpened()
         {
+            Logger.I(Security.Secure, $"{this} is open!");
             _transportIsOpen = true;
             if (_outBox != null && _outBox.Count > 0)
             {
@@ -155,6 +159,7 @@ namespace BLIP
 
         protected void TransportClosed(BLIPException e)
         {
+            Logger.I(Security.Secure, $"{this} closed with error {e}");
             if (_transportIsOpen)
             {
                 _transportIsOpen = false;
@@ -249,6 +254,13 @@ namespace BLIP
         internal void RunOnDelegateQueue(Action action)
         {
             _pendingDelegateCalls++;
+            #if DEBUG
+            if (_pendingDelegateCalls > _maxPendingDelegateCalls)
+            {
+                Logger.I(Security.Secure, $"New record: {_pendingDelegateCalls} pending delegate calls");
+                _maxPendingDelegateCalls = _pendingDelegateCalls;
+            }
+            #endif
             _callbackScheduler.DispatchAsync(() =>
             {
                 action();
@@ -273,6 +285,7 @@ namespace BLIP
                          _pendingResponses.SafeCount() > 0 || _sendingMsg != null || _pendingDelegateCalls > 0;
             if (active != Active)
             {
+                Logger.V(Security.Secure, $"{this} Active={active}");
                 Active = active;
             }
         }
@@ -344,7 +357,7 @@ namespace BLIP
 
             if (isNew)
             {
-                //Log
+                Logger.I(Security.Secure, $"{this} queuing outgoing {message} at index {index}");
             }
 
             if (sendNow)
@@ -373,6 +386,8 @@ namespace BLIP
             {
                 if (_transportIsOpen && !TransportCanSend)
                 {
+                    Logger.W(Security.Secure, 
+                             $"{this}: Attempt to send a request after the connection has started closing: {request}");
                     result = false;
                     return;
                 }
@@ -414,6 +429,8 @@ namespace BLIP
                 throw new InvalidOperationException("Cannot pause an already queued message");
             }
 
+            Logger.V(Security.Secure, $"{this} pausing {message}");
+
             if (_iceBox == null)
             {
                 _iceBox = new List<Message>();
@@ -436,6 +453,8 @@ namespace BLIP
                 {
                     throw new InvalidOperationException("Cannot unpause an already queued message");
                 }
+
+                Logger.V(Security.Secure, $"{this} resuming {message}");
 
                 _iceBox.RemoveAt(index);
                 if (message != _sendingMsg)
@@ -473,6 +492,8 @@ namespace BLIP
 
         internal void SendAck(ulong number, bool isRequest, ulong bytesReceived)
         {
+            var ackType = isRequest ? "ACKMSG" : "ACKRPY";
+            Logger.V(Security.Secure, $"{this} sending {ackType} of {number} ({bytesReceived} bytes)");
             var flags = (isRequest ? MessageFlags.AckMsg : MessageFlags.AckRpy) | MessageFlags.Urgent |
                         MessageFlags.NoReply;
 
@@ -518,7 +539,8 @@ namespace BLIP
         private void ReceivedFrame(ulong requestNum, MessageFlags flags, byte[] body)
         {
             var type = (MessageFlags)(flags & MessageFlags.TypeMask);
-
+            Logger.V(Security.Secure, 
+                     $"{this} rcvd frame of {TypeStrings[(int)type]} #{requestNum}, length {body.Length}");
             var key = requestNum;
             var complete = !flags.HasFlag(MessageFlags.MoreComing);
             switch (type)
@@ -568,7 +590,8 @@ namespace BLIP
                     else {
                         if (requestNum <= _numRequestsSent)
                         {
-                            //Log
+                            Logger.I(Security.Secure, 
+                                     $"??? {this} got unexpected response frame to my msg #{requestNum}");
                         }
                         else {
                             CloseWithError(BLIPUtility.MakeException(BLIPError.BadFrame, "Bogus message number {0} in response",
@@ -582,6 +605,8 @@ namespace BLIP
                     var msg = GetOutgoingMessage(requestNum, (type == MessageFlags.AckMsg));
                     if (msg == null)
                     {
+                        Logger.I(Security.Secure, 
+                                 $"??? {this} Received ACK for non-current message ({TypeStrings[(int)type]} {requestNum})");
                         break;
                     }
 
@@ -610,6 +635,7 @@ namespace BLIP
                     break;
                 default:
                     // To leave room for future expansion, undefined message types are just ignored.
+                    Logger.I(Security.Secure, $"??? {this} received header with unknown message type {(int)type}");
                     break;
             }
 
@@ -645,6 +671,8 @@ namespace BLIP
         {
             try
             {
+                Logger.I(Security.Secure, "Dispatching: ");
+                Logger.I(Security.PotentiallyInsecure, request.ToVerboseString());
                 bool handled;
                 if (request.Flags.HasFlag(MessageFlags.Meta))
                 {
@@ -664,9 +692,11 @@ namespace BLIP
                 {
                     if (!handled)
                     {
+                        Logger.I(Security.Secure, $"No handler found for incoming {request}");
                         request.Respond(BLIPError.NotFound, "No handler was found");
                     }
-                    else {
+                    else if(!request.NoReply && !request.RepliedTo) {
+                        Logger.I(Security.Secure, $"Returning default empty response to {request}");
                         request.Respond(null, null);
                     }
                 }
@@ -679,10 +709,8 @@ namespace BLIP
 
         private void DispatchResponse(Response response)
         {
-            if (OnResponse != null)
-            {
-                OnResponse(this, response);
-            }
+            Logger.I(Security.Secure, $"Dispatching {response}");
+            OnResponse?.Invoke(this, response);
         }
 
         private bool DispatchMetaRequest(Request request)

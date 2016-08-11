@@ -132,6 +132,7 @@ namespace BLIP
         {
             // This will allocate _response, causing -repliedTo to become YES, so Connection won't
             // send an automatic empty response after the current request handler returns.
+            Logger.I(Security.Secure, $"Deferring response to {this}");
             if (_response == null && !NoReply)
             {
                 _response = new Response(this);
